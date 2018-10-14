@@ -6,7 +6,7 @@ import os
 import keras.backend.tensorflow_backend as KTF
 
 # GPU设置
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # 只有一个GPU，设置为0，如果不想使用GPU，设置为-1
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # 只有一个GPU，设置为0，如果不想使用GPU，设置为-1
 config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.7  # 设置使用GPU容量占GPU总容量的比例
 sess = tf.Session(config=config)
@@ -108,3 +108,5 @@ if __name__ == '__main__':
         validation_steps=train_sample // train_batch_size
     )
     model.save('First_try_GPU.h5')
+    # 使用softmax作为输出层激活函数 loss: 0.1475 - acc: 0.9562 - val_loss: 0.1353 - val_acc: 0.9688
+    # 使用sigmoid作为输出层激活函数 loss: 0.2735 - acc: 0.9325 - val_loss: 0.2004 - val_acc: 0.9375

@@ -55,7 +55,7 @@ model.add(Dense(128))  # 全连接层
 model.add(Activation('relu'))  # 激活
 model.add(Dropout(0.2))  # 0.2概率断开神经元连接，防止过拟合
 model.add(Dense(10))  # 全连接层
-model.add(Activation('sigmoid'))
+model.add(Activation('softmax'))
 
 # 编译
 model.compile(
@@ -99,3 +99,5 @@ if __name__ == '__main__':
         validation_steps=train_sample // train_batch_size
     )
     model.save('First_try.h5')
+    # 使用softmax作为输出层激活函数 loss: 0.1475 - acc: 0.9562 - val_loss: 0.1353 - val_acc: 0.9688
+    # 使用sigmoid作为输出层激活函数 loss: 0.2735 - acc: 0.9325 - val_loss: 0.2004 - val_acc: 0.9375
