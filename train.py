@@ -1,6 +1,5 @@
-from keras.models import Sequential
-from keras.callbacks import EarlyStopping
 from keras.layers import Convolution2D, Activation, MaxPooling2D, Flatten, Dense, Dropout
+from keras.models import Sequential
 from keras.preprocessing.image import ImageDataGenerator
 
 # 训练集与校验集图片大小
@@ -91,13 +90,14 @@ if __name__ == '__main__':
     # 训练的val_loss在5轮内没有减少，则停止训练
     # early_stopping = EarlyStopping(monitor='val_loss', patience=5, mode='min')
     model.fit_generator(
-        train_generator,
-        steps_per_epoch=train_sample // train_batch_size,
-        epochs=epochs,
+        train_generator,    # 训练图片生成器
+        steps_per_epoch=train_sample // train_batch_size,   # 每轮处理图片数量
+        epochs=epochs,  # 训练多少轮次
         # callbacks=[early_stopping],
-        validation_data=test_generator,
-        validation_steps=train_sample // train_batch_size
+        validation_data=test_generator,     # 检验图片生成器
+        validation_steps=train_sample // train_batch_size   # 验证集的生成器返回次数
     )
+    # 保存训练好的模型
     model.save('First_try.h5')
     # 使用softmax作为输出层激活函数 loss: 0.1475 - acc: 0.9562 - val_loss: 0.1353 - val_acc: 0.9688
     # 使用sigmoid作为输出层激活函数 loss: 0.2735 - acc: 0.9325 - val_loss: 0.2004 - val_acc: 0.9375

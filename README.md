@@ -15,8 +15,7 @@
     * 池化层
     * 全连接层
 * 总结
-* 实践：实现手写数据识别
-* FAQ
+* 实践：实现手写数字识别
 * 参考
 
 ## 计算机眼中的图片
@@ -132,15 +131,16 @@ CNN识别一张图片是靠特征进行识别的，比如一张图片CNN提取�
 ![](doc/act2.jpg)
 
 由于激活函数涉及的知识较多，这里不展开细说，有兴趣的同事可以自行研究，这里只简单介绍一下常用的激活函数，和该如何
-选择激活函数。
+选择激活函数。目前表现最好的激活函数是**ReLu**函数。它可以把小于0的数值转换成0。
 
-常用的激活函数有以下几种：
+![](doc/relu.png)
+
+其它常用的激活函数有以下几种：
 * softmax
 * elu
 * selu
 * softplus
 * softsign
-* relu
 * tanh
 * sigmoid
 * hard_sigmoid
@@ -205,7 +205,7 @@ CNN识别一张图片是靠特征进行识别的，比如一张图片CNN提取�
 全连接层就是使用了**softmax**激励函数作为输出层的多层感知机(Multi-Layer Perceptron)，
 “全连接”表示上一层的每一个神经元，都和下一层的每一个神经元是相互连接的。
 卷积层和池化层的输出代表了输入图像的高级特征，全连接层的目的就是用这些特征进行分类，类别基于训练集。
-全连接层的输出概率之和为1，这是由激励函数Softmax保证的。Softmax函数把任意实值的向量转变成元素取之0-1且和为1的向量。
+Softmax函数把任意实值的向量转变成元素取之0-1且和为1的向量。
 
 ![](doc/fc2.jpg)
 
@@ -238,7 +238,7 @@ CNN识别一张图片是靠特征进行识别的，比如一张图片CNN提取�
 如果我们的训练集足够大，网络就有望正确分类新图片，获得良好的泛化(generalization)能力。
 
 在这里我推荐一个网站，它把卷积神经网络进行了可视化，这个网络是用MNIST手写数字数据库训练而来的。
-[点击这里](http://scs.ryerson.ca/~aharley/vis/conv/flat.html)，以便更深地理解卷积神经网络的细节。（**需要翻墙**）
+[点击这里](http://scs.ryerson.ca/~aharley/vis/conv/flat.html)，以便更深地理解卷积神经网络的细节。（**需要科学上网**）
 ***
 上例中，我们用了两组卷积+池化层，其实这些操作可以在一个卷积网络内重复无数次。
 如今有些表现出众的卷积网络，都有数以十计的卷积+池化层！并且，不是每个卷积层后面都要跟个池化层。
@@ -269,3 +269,176 @@ CNN识别一张图片是靠特征进行识别的，比如一张图片CNN提取�
 * DenseNet（2016年8月）： 由Gao Huang发表，Densely Connected Convolutional Network的每一层都直接与其他各层前向连接。
 DenseNet已经在五个高难度的物体识别基础集上，显式出非凡的进步。
 
+
+## 实践：实现手写数字识别
+
+在了解了CNN的工作原理后，我们来自己设计一个神经网络来，用于识别手写数字。
+编程语言我们选择使用**Python 3**，因为比较简单而且工具比较丰富。深度学习库我们使用**Keras**与
+**Tensorflow**配套使用，这两个工具都是开源的而且把复杂的数学操作和算法进行了很好的封装，我们只需要调用
+封装好的API，就能实现我们自己的神经网络。
+
+### step1
+
+因为我们这次需要识别手写的数字，所以我们需要大量打好标签的数字图片用于训练我们的网络。图片我已经事先搞好了。
+* 一共**10000**张
+* 0~9一共**10**个分类，每个分类**1000**张
+* 每张图片的像素是**28x28**
+* 训练集跟校验集数量比4：1(即800张用于训练，200张用于校验训练结果)
+* 以文件夹名称作为分类名称，训练目录与校验目录里各放一份。
+
+    ![](doc/num.png)
+
+### step2
+接下来我们开始设计我们的网络，首先是第一层。因为我们训练的图片是**28x28**的，所以滤波器的大小不超过这个值就行。一般我们
+用**3x3**就行了；滤波器的个数没有强制要求，因为我们图片像素不大，分类也不多，不需要太多的滤波器，所以我们
+初始化**32**个滤波器，滤波器的步长默认为1，此处我们用默认的就行。第一次卷积操作后，激活函数使用**ReLu**；
+激活后使用**2x2**的**MaxPooling**来进行**池化**。此时我们的网络结构如下图：
+
+ ![](doc/1f.png)
+
+代码如下：
+```python
+# 卷积层
+model.add(Convolution2D(
+    32,  # 卷积核数
+    (3, 3),  # 核的长宽
+    input_shape=input_shape  # 输入shape(28,28,3)，只在输入层设置即可
+))
+
+# 激活层
+model.add(Activation('relu'))
+
+# 池化
+model.add(MaxPooling2D(
+    pool_size=(2, 2)  # 下采样尺寸
+))
+```
+
+### step3
+经过上述操作我们得到了32个13x13的特征集，我们可以继续提取特征，重复上述的操作(卷积+激活+池化），设计的参数跟上一步一样。
+此时我们的网络结构如下图：
+
+ ![](doc/2f.png)
+
+ 代码如下：
+```python
+# 第二层
+model.add(Convolution2D(32, (3, 3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+```
+
+### step4
+现在我们的特征集是**5x5**的大小，还能继续卷积下去，当然大家也可以只提取到这里然后做全连接，但准确率可能不会太高。注意
+一点，每个卷积层的滤波器个数其实可以是不一样的，在这里我们可以把滤波器设置为64，大小跟步长不变。这一层的结构如下：
+
+ ![](doc/3f.png)
+
+  代码如下：
+```python
+# 第三层
+model.add(Convolution2D(64, (3, 3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+```
+
+### step5
+此时我们的特征集已经是1x1，所以后面已经不能再卷积下去了，因此大家要注意我们的网络结构不是想设计多少层就能设计出多少层来的。
+此时我们要把这64个特征集**一维化**，然后进行全连接。全连接层我这里只用了两层（数据量不多，图片也不大，没必要搞这么深，而且
+深度跟参数加上去了公司电脑不好跑），第一层128深度，使用ReLu激活；第二层是最后一层作为输出层，因为有10个分类，所以深度是10，
+使用**SoftMax**激活。第一层的神经元跟第二层神经元设定0.2的概率断开，防止**过拟合**。结构图如下：
+
+    过拟合：拿识别数字通俗来讲，过拟合现象就是这个网络针对训练集中的数字有不错的效果，但训练集外的数字效果很差。网络训练
+    出来的参数只适配了训练图片，但没有把通用的特征参数训练出来。
+
+ ![](doc/4f.png)
+
+   代码如下：
+```python
+# 准备全连接（Full Connection）
+model.add(Flatten())  # 数据一维化
+model.add(Dense(128))  # 全连接层
+model.add(Activation('relu'))  # 激活
+model.add(Dropout(0.2))  # 0.2概率断开神经元连接，防止过拟合
+model.add(Dense(10))  # 全连接层
+model.add(Activation('softmax'))
+
+```
+
+### step6
+此时我们已经设计好我们的神经网络模型，最后我们编译我们的模型，然后从step1中按分类放置好的图片中构建图片生成器放到模型中。
+图片生成器**ImageDataGenerator**与模型**Model**详细的API可以去[keras](https://keras-cn.readthedocs.io/en/latest/)
+的网站中查看。此处完整代码写在**train.py**。
+
+```python
+# 编译
+model.compile(
+    loss='categorical_crossentropy',  # 损失函数
+    optimizer='rmsprop',  # 优化器
+    metrics=['accuracy']  # 指标
+)
+```
+
+```python
+# 构建训练图片生成器
+train_data_gan = ImageDataGenerator(
+    shear_range=0.2,  # 剪切强度（逆时针方向的剪切变换角度）
+    zoom_range=0.2  # 随机缩放的幅度
+)
+
+train_generator = train_data_gan.flow_from_directory(
+    train_data_dir,  # 目录
+    target_size=(img_width, img_height),  # 尺寸
+    batch_size=train_batch_size,  # 批次大小
+    class_mode='categorical'
+)
+
+# 构建校验图片生成器
+test_data_gen = ImageDataGenerator()
+
+test_generator = test_data_gen.flow_from_directory(
+    val_data_dir,  # 目录
+    target_size=(img_width, img_height),  # 尺寸
+    batch_size=train_batch_size,  # 批次大小
+    class_mode='categorical'
+)
+
+```
+
+```python
+# 训练的val_loss在5轮内没有减少，则停止训练
+# early_stopping = EarlyStopping(monitor='val_loss', patience=5, mode='min')
+model.fit_generator(
+    train_generator,    # 训练图片生成器
+    steps_per_epoch=train_sample // train_batch_size,   # 每轮处理图片数量
+    epochs=epochs,  # 训练多少轮次
+    # callbacks=[early_stopping],
+    validation_data=test_generator,     # 检验图片生成器
+    validation_steps=train_sample // train_batch_size   # 验证集的生成器返回次数
+)
+# 保存训练好的模型
+model.save('First_try.h5')
+# 使用softmax作为输出层激活函数 loss: 0.1475 - acc: 0.9562 - val_loss: 0.1353 - val_acc: 0.9688
+# 使用sigmoid作为输出层激活函数 loss: 0.2735 - acc: 0.9325 - val_loss: 0.2004 - val_acc: 0.9375
+```
+
+### step7
+训练好的网络我们可以测试一下效果。输出的内容就是每个分类的得分，可以用可视化工具展示一下。完整代码看**pre_model.py**
+
+```python
+# 装载模型
+model = load_model('First_try.h5')
+# 放进模型中进行识别
+preds = predict(model, img28x28)
+# 打印结果
+print(preds)
+# [[1.8969359e-08 3.0194280e-06 1.5034641e-05 6.6368443e-06 1.3437713e-04
+#  4.1928544e-07 1.0285174e-06 7.1962982e-05 3.4167066e-01 6.5809685e-01]]
+```
+
+ ![](doc/result.png)
+
+***
+### 完整的代码、训练好的模型与训练用的图片我已经上传到[这里](https://github.com/AziCat/CNN_Write_Number)。
+
+## 参考
