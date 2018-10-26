@@ -442,3 +442,10 @@ print(preds)
 ### 完整的代码、训练好的模型与训练用的图片我已经上传到[这里](https://github.com/AziCat/CNN_Write_Number)。
 
 ## 参考
+
+* [http://cs231n.github.io/transfer-learning/](http://cs231n.github.io/transfer-learning/)
+* [https://www.jianshu.com/p/fe428f0b32c1](https://www.jianshu.com/p/fe428f0b32c1)
+* [https://zhuanlan.zhihu.com/p/21407711?refer=intelligentunit](https://zhuanlan.zhihu.com/p/21407711?refer=intelligentunit)
+* [https://zhuanlan.zhihu.com/p/25754846](https://zhuanlan.zhihu.com/p/25754846)
+* [keras](https://keras-cn.readthedocs.io/en/latest/)
+* [卷积神经网络CNN](https://www.zhihu.com/topic#%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%EF%BC%88CNN%EF%BC%89)
